@@ -17,32 +17,26 @@ import uritemplate
 import feedparser
 import re, urllib,urllib2,simplejson
 import logging
+import settings
 
 logging.basicConfig(level=logging.DEBUG)
 
-TRUSTED_FROM_EMAIL='4403764038@vtext.com'
-LOCATION_REGEX_PREFIX = "^[Ll][Oo][Cc]\s"
-GMAIL_ATOM_ENDPOINT = 'https://mail.google.com/mail/feed/atom/'
-GEOCODDE_ENDPOINT = 'http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false'
-LATITUDE_ENDPONT = 'https://www.googleapis.com/latitude/v1/%s'
-
-OAUTH_GMAIL_DATA_FILE = 'oauth_token_gmail.dat'
-OAUTH_LATITUDE_DATA_FILE = 'oauth_token.dat'
-
 def get_location_from_inbox():
-  http_gmail = oauth_wrap.get_wrapped_http(file=OAUTH_GMAIL_DATA_FILE)
+  http_gmail = oauth_wrap.get_wrapped_http(file=settings.FILENAME_GMAIL_TOKEN_JSON)
   
   parameters = {}
-  resp, content = http_gmail.request(uritemplate.expand(GMAIL_ATOM_ENDPOINT,parameters))
+  resp, content = http_gmail.request(uritemplate.expand(settings.GMAIL_ATOM_ENDPOINT,parameters))
+  
+  if resp['status'] != '200': raise Exception('Invalid response %s.' % resp['status'])
   
   logging.debug('gmail request response: %s' % resp)
   
   d = feedparser.parse(content)
   
-  regex = re.compile(LOCATION_REGEX_PREFIX)
+  regex = re.compile(settings.LOCATION_REGEX_PREFIX)
   
   for entry in d.entries:
-  	if entry.author_detail.email == TRUSTED_FROM_EMAIL:
+  	if entry.author_detail.email == settings.TRUSTED_FROM_EMAIL:
   		match_obj = regex.match(entry.summary)
   		if match_obj != None:
   			logging.debug("found matching email location to set, email summary: %s" % entry.summary)
@@ -54,7 +48,7 @@ def get_location_from_inbox():
 
 def geocode_loc_text(loc_text):
   encoded_text = urllib.quote(loc_text)
-  endpoint = GEOCODDE_ENDPOINT % (encoded_text)
+  endpoint = settings.GEOCODDE_ENDPOINT % (encoded_text)
   
   logging.debug('geocode request endpoint: %s' % endpoint)
   
@@ -68,9 +62,9 @@ def geocode_loc_text(loc_text):
 
 def main():
   #http://www.google.com/url?sa=D&q=http://www.googleapis.com/discovery/0.1/describe%3Fapi%3Dlatitude%26apiVersion%3D1%26pp%3D1&usg=AFQjCNGSM47dMOefinzyE7Cqa0lmx7tqsA
-  http = oauth_wrap.get_wrapped_http(file=OAUTH_LATITUDE_DATA_FILE)
+  http = oauth_wrap.get_wrapped_http(file=settings.FILENAME_LAT_TOKEN_JSON)
   
-  http_url= LATITUDE_ENDPONT % ('currentLocation')
+  http_url= settings.LATITUDE_ENDPONT % ('currentLocation')
   parameters={'granularity': 'best'}
   resp, content = http.request(uritemplate.expand(http_url, parameters))
   
@@ -93,7 +87,9 @@ def main():
   	  body=simplejson.dumps(parameters),
   	  headers = {'Content-type': 'application/json'})
   	
+  	if resp['status'] != '200': raise Exception('Invalid response %s.' % resp['status'])
+  	
   	logging.debug('updated location response: %s' % resp)
-  
+ 
 if __name__ == '__main__':
   main()
