@@ -70,6 +70,8 @@ def main():
   
   logging.debug('current location response: %s' % resp)
   
+  print content
+  
   loc = get_location_from_inbox()
   
   logging.debug('location from inbox: %s' % loc)
