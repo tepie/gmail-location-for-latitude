@@ -22,3 +22,9 @@ PARAMETERS = {
 		
 FILENAME_GMAIL_TOKEN_JSON = 'oauth_token_gmail.dat'
 FILENAME_LAT_TOKEN_JSON = 'oauth_token_lat.dat'
+
+TRUSTED_FROM_EMAIL='4403764038@vtext.com'
+LOCATION_REGEX_PREFIX = "^[Ll][Oo][Cc]\s"
+GMAIL_ATOM_ENDPOINT = 'https://mail.google.com/mail/feed/atom/'
+GEOCODDE_ENDPOINT = 'http://maps.google.com/maps/api/geocode/json?address=%s&sensor=false'
+LATITUDE_ENDPONT = 'https://www.googleapis.com/latitude/v1/%s'
