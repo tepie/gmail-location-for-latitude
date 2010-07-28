@@ -18,6 +18,7 @@ import feedparser
 import re, urllib,urllib2,simplejson
 import logging
 import settings
+import time
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -29,9 +30,9 @@ def get_location_from_inbox():
   
   if resp['status'] != '200': raise Exception('Invalid response %s.' % resp['status'])
   
-  logging.debug('gmail request response: %s' % resp)
-  
   d = feedparser.parse(content)
+  
+  result = {}
   
   regex = re.compile(settings.LOCATION_REGEX_PREFIX)
   
@@ -40,7 +41,9 @@ def get_location_from_inbox():
   		match_obj = regex.match(entry.summary)
   		if match_obj != None:
   			logging.debug("found matching email location to set, email summary: %s" % entry.summary)
-  			return entry.summary[match_obj.end():]
+  			result['timestampMs'] = time.mktime(entry.published_parsed) 
+  			result['location'] = entry.summary[match_obj.end():] 
+  			return result
   
   logging.warning("no location text found in atom feed")
   
@@ -60,6 +63,10 @@ def geocode_loc_text(loc_text):
   
   return lat_lng_map
 
+def get_stamp_from_location(current_loc_json):
+	json_obj = simplejson.loads(current_loc_json)	
+	return json_obj["data"]["timestampMs"]
+
 def main():
   #http://www.google.com/url?sa=D&q=http://www.googleapis.com/discovery/0.1/describe%3Fapi%3Dlatitude%26apiVersion%3D1%26pp%3D1&usg=AFQjCNGSM47dMOefinzyE7Cqa0lmx7tqsA
   http = oauth_wrap.get_wrapped_http(file=settings.FILENAME_LAT_TOKEN_JSON)
@@ -68,18 +75,24 @@ def main():
   parameters={'granularity': 'best'}
   resp, content = http.request(uritemplate.expand(http_url, parameters))
   
-  logging.debug('current location response: %s' % resp)
+  if resp['status'] != '200': raise Exception('Invalid response %s.' % resp['status'])
   
-  print content
+  curr_location_stamp = get_stamp_from_location(content)
   
-  loc = get_location_from_inbox()
+  logging.debug('current location timestamp: %s' % curr_location_stamp)
   
-  logging.debug('location from inbox: %s' % loc)
+  loc_inbox = get_location_from_inbox()
   
-  if loc == None:
-  	logging.warning('no location update found in inbox, value is %s' % loc)
+  logging.debug('location from inbox: %s' % loc_inbox)
+  
+  if loc_inbox == None:
+  	logging.warning('no location update found in inbox, value is %s' % loc_inbox)
+  	
+  elif curr_location_stamp > loc_inbox['timestampMs']:
+  	logging.warning('current location is more recent than the inbox value, will not update: %s > %s == True' % (curr_location_stamp,loc_inbox['timestampMs']))
+  	
   else:
-  	geo_map = geocode_loc_text(loc)
+  	geo_map = geocode_loc_text(loc['location'])
   		
   	parameters={"data":{"kind":"latitude#location","latitude":geo_map['lat'],"longitude":geo_map['lng'],"accuracy":130,"altitude":35}}
   	
@@ -91,7 +104,7 @@ def main():
   	
   	if resp['status'] != '200': raise Exception('Invalid response %s.' % resp['status'])
   	
-  	logging.debug('updated location response: %s' % resp)
+  	logging.debug('updated location response: %s' % content)
  
 if __name__ == '__main__':
   main()
