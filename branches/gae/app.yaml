@@ -1,0 +1,10 @@
+application: gmail-location-for-latitude
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+
+- url: /.*
+  script: glfl_main.py
+  login: required
