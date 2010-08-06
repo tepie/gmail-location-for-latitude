@@ -2,9 +2,47 @@
 <html>
 	<head>
 		<meta NAME="author" CONTENT="Terrence Pietrondi">
-		<title>gmail location for latitude</title>
+		<title>{% block title %}gmail location for latitude{% endblock %}</title>
 	</head>
 	<body>
-	user: {{ preferences.who.user_id }}
+	
+	<div id="heading">
+		{% block page-heading %}
+		<h1>gmail location for latitude</h1>
+		<p>hello {{ preferences.who.email }}, the following are your gmail location for latitude preferences:</p>
+		{% endblock %}
+	</div>
+	<div id="current-preferences">
+		{% block preference-section %}
+		<table>
+			<tr><td>user id:</td><td>{{ preferences.who.user_id }}</td></tr>
+			<tr><td>latitude token:</td><td>{{ preferences.latitude_token }}</td></tr>
+			<tr><td>gmail token:</td><td>{{ preferences.gmail_token }}</td></tr>
+			<tr><td>trusted from:</td><td>{{ preferences.trusted_from }}</td></tr>
+			<tr><td>created:</td><td>{{ preferences.created }}</td></tr>
+			<tr><td>updated:</td><td>{{ preferences.updated }}</td></tr>
+		</table>
+		{% endblock %}
+	</div>
+	
+	<!-- latitude setup section -->
+	<div id="latitude-section">
+		{% block latitude-section %}
+		
+			{% if auth_url_lat %}
+				
+			{% else %}
+			   
+			{% endif %}
+
+		
+		{% endblock %}
+	</div>
+	
+	<!-- gmail setup section -->
+	<div id="gmail-section">
+		{% block gmail-section %}
+		{% endblock %}
+	</div>
 	</body>
 </html>
