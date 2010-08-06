@@ -3,7 +3,7 @@
 
 import urlparse
 import oauth2 as oauth
-import httplib2
+#import httplib2
 import urllib
 import simplejson
 import logging

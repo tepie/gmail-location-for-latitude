@@ -2,9 +2,13 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-from google.appengine.api import users
+#from google.appengine.api import users
+from google.appengine.api import oauth
 
+import settings
+#import oauth2 as oauth
 import cgi,os,logging,sys
+#import three_legged_dance
 
 class Preferences(db.Model):
 	who = db.UserProperty(required=True)
@@ -16,21 +20,32 @@ class Preferences(db.Model):
 
 class MainPage(webapp.RequestHandler):
 	def get(self):
-		user_preferences_query = db.GqlQuery("SELECT * FROM Preferences WHERE owner = :1", users.get_current_user())
+		user_preferences_query = db.GqlQuery("SELECT * FROM Preferences WHERE owner = :1", oauth.get_current_user())
 		results = user_preferences_query.fetch(1)
 		
 		preference_model = None
+		_template_values = {}
 		
 		if len(results) == 1: 
 			for result in results: 
 				preference_model = result
 		
 		else:
-			preference_model = Preferences(who= users.get_current_user())
+			preference_model = Preferences(who= oauth.get_current_user())
 			preference_model.put()
 		
-		_template_values = {'preferences' : preference_model}
+		_template_values['preferences'] = preference_model
 		
+		#if preference_model.latitude_token == None or preference_model.gmail_token == None:
+		#	consumer = oauth.Consumer(settings.CONSUMER_KEY, settings.CONSUMER_SECRET)
+		#	client = oauth.Client(consumer)
+		#	
+		#	token_lat = three_legged_dance.step1_get_request_token(client,settings.REQUEST_TOKEN_URL_LAT)
+		#	auth_url_lat = three_legged_dance.step2_redirect_to_provider(token_lat,settings.AUTHORIZE_URL_LAT)
+		#	_template_values['auth_url_lat'] = auth_url_lat
+		#else:
+		#	_template_values['auth_url_lat'] = None
+			
 		_path = os.path.join(os.path.dirname(__file__), 'Template_MainPage.html')
 		self.response.out.write(template.render(_path, _template_values))
 
