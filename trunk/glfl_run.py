@@ -88,11 +88,12 @@ def main():
   if loc_inbox == None:
   	logging.warning('no location update found in inbox, value is %s' % loc_inbox)
   	
-  elif curr_location_stamp > loc_inbox['timestampMs']:
-  	logging.warning('current location is more recent than the inbox value, will not update: %s > %s == True' % (curr_location_stamp,loc_inbox['timestampMs']))
+  #elif float(curr_location_stamp) > loc_inbox['timestampMs']:
+  #	logging.warning('current location is more recent than the inbox value, will not update: %s > %s == True' % (float(curr_location_stamp),loc_inbox['timestampMs']))
+  #	print type(curr_location_stamp), type(loc_inbox['timestampMs'])
   	
   else:
-  	geo_map = geocode_loc_text(loc['location'])
+  	geo_map = geocode_loc_text(loc_inbox['location'])
   		
   	parameters={"data":{"kind":"latitude#location","latitude":geo_map['lat'],"longitude":geo_map['lng'],"accuracy":130,"altitude":35}}
   	
